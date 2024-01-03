@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"strconv"
 	"html/template"
 	"log"
+	"net/http"
+	"strconv"
 )
 
 // ==== ROUTES ====
@@ -14,23 +14,23 @@ func home(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r) // This function replies to the request with a 404 not found error.
 		return
 	}
-	ts, err := template.ParseFiles("./ui/html/pages/home.tmpl.html")
-	if err != nil {
-		log.Print(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	err = ts.Execute(w, nil)
-	if err != nil {
-		log.Print(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	// ts, err := template.ParseFiles("./ui/html/pages/home.tmpl")
+	// if err != nil {
+	// 	log.Print(err.Error())
+	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	return
+	// }
+	// err = ts.Execute(w, nil)
+	// if err != nil {
+	// 	log.Print(err.Error())
+	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// }
 	files := []string{
-		"./ui/html/base.tmpl.html",
-		"./ui/html/pages/home.tmpl.html",
-		"./ui/html/partials/nav.tmpl.html",
+		"./ui/html/base.tmpl",
+		"./ui/html/partials/nav.tmpl",
+		"./ui/html/pages/home.tmpl",
 	}
-	ts, err = template.ParseFiles(files...)
+	ts, err := template.ParseFiles(files...)
 	if err != nil {
 		log.Print(err.Error())
 		http.Error(w, "Interval Server Error", http.StatusInternalServerError)
@@ -46,16 +46,16 @@ func home(w http.ResponseWriter, r *http.Request) {
 func snippetView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-			http.NotFound(w, r)
-			return
+		http.NotFound(w, r)
+		return
 	}
-	
+
 	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 }
 
 func snippetCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost) // Leeting user know what methods are allowed once we deny his one
+		w.Header().Set("Allow", http.MethodPost)                         // Leeting user know what methods are allowed once we deny his one
 		http.Error(w, "Method not Allowed", http.StatusMethodNotAllowed) // Letting the user know that the used method is not correct
 		return
 	}
