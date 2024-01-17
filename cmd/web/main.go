@@ -7,9 +7,8 @@ import (
 	"os"
 )
 
-
 type application struct {
-	logger *slog.Logger 
+	logger *slog.Logger
 }
 
 func main() {
@@ -19,7 +18,7 @@ func main() {
 
 	// ===== Create Custom Logger =====
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	
+
 	// ===== Initialize Application struct =====
 	// initialize a new instance of the application struct with all dependencies (e.g. our logger for now)
 	app := &application{
