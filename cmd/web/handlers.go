@@ -38,13 +38,13 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
         // use this to create a log entry at Error level containing the error
         // message, also including the request method and URI as attributes to 
         // assist with debugging.
-		app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
+		app.serverError(w,r,err)
 		http.Error(w, "Interval Server Error", http.StatusInternalServerError)
 		return
 	}
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
+		app.serverError(w,r,err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
@@ -52,7 +52,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		app.notFound(w) // using our wrapper for convenience and shorter code
 		return
 	}
 
@@ -62,7 +62,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)                         // Leeting user know what methods are allowed once we deny his one
-		http.Error(w, "Method not Allowed", http.StatusMethodNotAllowed) // Letting the user know that the used method is not correct
+		app.clientError(w, http.StatusMethodNotAllowed) //use the error helpers.
 		return
 	}
 	w.Write([]byte("Create a new Snippet\n"))

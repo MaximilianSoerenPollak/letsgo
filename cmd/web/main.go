@@ -27,16 +27,11 @@ func main() {
 
 	// ===== Start & Config Server and routes =====
 
-	mux := http.NewServeMux()
-	fileServer := http.FileServer(http.Dir("./ui/static"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
 	logger.Info("starting server", slog.String("addr", ":4000"))
 	// Using the logger to return / log any errors that http.ListenAndServe gives us.
-	err := http.ListenAndServe(*addr, mux)
+	// We are also using here app.routes() in order to get the servemux etc. 
+	err := http.ListenAndServe(*addr, app.routes())
 	logger.Error(err.Error())
 	os.Exit(1)
 
