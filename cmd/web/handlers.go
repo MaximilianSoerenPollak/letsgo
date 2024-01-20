@@ -64,6 +64,8 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		} else {
 			app.serverError(w, r, err) 
 		}
+		// We return here early so it does NOT show the empty snippet to the user
+		return
 	}
 	// Plain text response body for the HTML response
 	fmt.Fprintf(w, "%+v", snippet)
