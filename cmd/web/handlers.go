@@ -56,7 +56,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
+	fmt.Fprintf(w, "Display a specific snippet with ID %d...\n", id)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
@@ -74,5 +74,5 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 		return 
 	}
 	// Redirect the user to the relevant page for the snippet
-	http.Redirect(w, r, fmt.Sprintf("f/snipper/view?id=%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
 }
