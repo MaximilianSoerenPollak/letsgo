@@ -3,9 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
-	"html/template"
+
 	"snippetbox.msp.net/internal/models"
 )
 
@@ -17,42 +18,29 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r) // This function replies to the request with a 404 not found error.
 		return
 	}
-	// ts, err := template.ParseFiles("./ui/html/pages/home.tmpl")
-	// if err != nil {
-	// 	log.Print(err.Error())
-	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// 	return
-	// }
-	// err = ts.Execute(w, nil)
-	// if err != nil {
-	// 	log.Print(err.Error())
-	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// }
+	files := []string{
+		"./ui/html/base.tmpl",
+		"./ui/html/partials/nav.tmpl",
+		"./ui/html/pages/view.tmpl",
+	}
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v\n", snippet)
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
 	}
-	// }
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	//   	// Because the home handler is now a method against the application
-	//        // struct it can access its fields, including the structured logger. We'll
-	//        // use this to create a log entry at Error level containing the error
-	//        // message, also including the request method and URI as attributes to
-	//        // assist with debugging.
-	// 	app.serverError(w,r,err)
-	// 	http.Error(w, "Interval Server Error", http.StatusInternalServerError)
-	// 	return
-	// }
-	// err = ts.ExecuteTemplate(w, "base", nil)
-	// if err != nil {
-	// 	app.serverError(w,r,err)
-	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// }
+	data := templateData{
+		Snippets: snippets,
+	}
+
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -74,22 +62,23 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	files := []string{
 		"./ui/html/base.tmpl",
 		"./ui/html/partials/nav.tmpl",
-		"./ui/html/pages/home.tmpl",
-		}
+		"./ui/html/pages/view.tmpl",
+	}
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-	  	// Because the home handler is now a method against the application
-	       // struct it can access its fields, including the structured logger. We'll
-	       // use this to create a log entry at Error level containing the error
-	       // message, also including the request method and URI as attributes to
-	       // assist with debugging.
-		app.serverError(w,r,err)
-		http.Error(w, "Interval Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
-	err = ts.ExecuteTemplate(w, "base", snippet)
+	//Creating our instance of the template struct that holds all of the data.
+	data := templateData{
+		Snippet: snippet,
+	}
+	// Execute the templae files.
+	// Important to note here, anything that you pass as the final parameter to ExecuteTemplate is represented as the '.'
+	// Passing in our tempalte struct here so we can access all data that is internal.
+	err = ts.ExecuteTemplate(w, "base", data)
 	if err != nil {
-		app.serverError(w,r,err)
+		app.serverError(w, r, err)
 	}
 }
 
