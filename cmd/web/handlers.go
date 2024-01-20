@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+	"snippetbox.msp.net/internal/models"
 )
 
 // ==== ROUTES ====
@@ -55,8 +57,16 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w) // using our wrapper for convenience and shorter code
 		return
 	}
-
-	fmt.Fprintf(w, "Display a specific snippet with ID %d...\n", id)
+	snippet, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, r, err) 
+		}
+	}
+	// Plain text response body for the HTML response
+	fmt.Fprintf(w, "%+v", snippet)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {

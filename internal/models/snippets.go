@@ -3,6 +3,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 )
@@ -51,6 +52,22 @@ func (m *SnippetModel) Insert(title, content string, expires int) (int, error){
 // Return a specific snippet via it's ID 
 
 func (m *SnippetModel) Get(id int) (Snippet, error){
+	// We do not want to return any expired Snippets that's why we added a filter. 
+	stmt := `SELECT id, title, content, created, expires FROM snippets WHERE expires > UTC_TIMESTAMP() AND id = ?`
+	// AS we have the ID as a Primary Key it should only return ALWAYS one row.(or none if it doesn exist)
+	row := m.DB.QueryRow(stmt, id)
+
+	// Declare an empty new Snippet struct to use.
+	var s Snippet
+	err := row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)	
+	if err != nil {
+		// We are checking if we get 0 rows back, as then we can send a better Error message.
+		if errors.Is(err, sql.ErrNoRows) {
+			return Snippet{}, ErrNoRecord // This is our own custom error that we have created in the 'errors' file
+		} else {
+			return Snippet{}, err 
+		}
+	}
 	return Snippet{}, nil 
 }
 
