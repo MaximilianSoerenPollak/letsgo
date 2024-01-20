@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+	"snippetbox.msp.net/internal/models"
 )
 
 // ==== ROUTES ====
@@ -55,8 +57,18 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w) // using our wrapper for convenience and shorter code
 		return
 	}
-
-	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
+	snippet, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, r, err) 
+		}
+		// We return here early so it does NOT show the empty snippet to the user
+		return
+	}
+	// Plain text response body for the HTML response
+	fmt.Fprintf(w, "%+v", snippet)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
@@ -65,5 +77,14 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusMethodNotAllowed) //use the error helpers.
 		return
 	}
-	w.Write([]byte("Create a new Snippet\n"))
+	title := "0 snail"
+	content := "0 snail\nClimb Mount Fuji,\n But slowly, slowly!\n\n- Kobayashi Issa"
+	expires := 7
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, r, err)
+		return 
+	}
+	// Redirect the user to the relevant page for the snippet
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
 }
