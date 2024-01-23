@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"path/filepath"
+	"time"
 	"snippetbox.msp.net/internal/models"
 )
 
@@ -10,8 +11,9 @@ import (
 // AS we can at most load one thing into the HTML Templates we want to circumvent this by adding all needed information
 // to a template Struct.
 type templateData struct {
-	Snippet  models.Snippet
-	Snippets []models.Snippet
+	CurrentYear int
+	Snippet     models.Snippet
+	Snippets    []models.Snippet
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -27,16 +29,24 @@ func newTemplateCache() (map[string]*template.Template, error) {
 
 		name := filepath.Base(page)
 
-		files := []string{
-			"./ui/html/base.tmpl",
-			"./ui/html/partials/nav.tmpl",
-			page,
+		ts, err := template.ParseFiles("./ui/html/base.tmpl")
+		if err != nil {
+			return nil, err
 		}
-		ts, err := template.ParseFiles(files...)
+		// Calling parseglob to add any partials (in this template set)
+		ts, err = ts.ParseGlob("./ui/html/partials/*.tmpl")
+		if err != nil {
+			return nil, err
+		}
+		ts, err = ts.ParseFiles(page)
 		if err != nil {
 			return nil, err
 		}
 		cache[name] = ts
 	}
 	return cache, nil
+}
+
+func humanDate(t time.Time) string{
+	return t.Format("02 Jan 2006 at 15:40")
 }

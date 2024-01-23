@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 // This will help us write a log entry at error level, including the requst that cause import
@@ -34,9 +36,25 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 		app.serverError(w, r, err)
 		return
 	}
-	w.WriteHeader(status)
-	err := ts.ExecuteTemplate(w, "base", data)
+	// We need to make a 'trial render' and check if that is okay before we send it to the client.
+	// In order to catch runtime template errors
+	buf := new(bytes.Buffer)
+
+	// Here we write the template to the buffer instead of straight to the HTTP response writer.
+	// If there is an error we can catch it and we can just then return it without sending the half HTML page.
+	err := ts.ExecuteTemplate(buf, "base", data)
 	if err != nil {
 		app.serverError(w, r, err)
+		return
+	}
+	// Once no 'errors' are there we can write the HTTP status to the ResponseWriter
+	w.WriteHeader(status)
+	// Just writing the buffer to the HTML output.
+	buf.WriteTo(w)
+}
+
+func (app *application) newTemplateData(r *http.Request) templateData {
+	return templateData{
+		CurrentYear: time.Now().Year(),
 	}
 }

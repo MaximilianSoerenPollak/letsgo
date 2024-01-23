@@ -22,9 +22,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	app.render(w, r, http.StatusOK, "home.tmpl", templateData{
-		Snippets: snippets,
-	})
+	// Calling the data here in order to populate the default data (currently just the year)
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
+	app.render(w, r, http.StatusOK, "home.tmpl", data)
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -43,12 +44,13 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		// We return here early so it does NOT show the empty snippet to the user
 		return
 	}
+	// Getting new data object to populate the default values
+	data := app.newTemplateData(r)
+	data.Snippet = snippet
 	// Execute the templae files.
 	// Important to note here, anything that you pass as the final parameter to ExecuteTemplate is represented as the '.'
 	// Passing in our tempalte struct here so we can access all data that is internal.
-	app.render(w, r, http.StatusOK, "view.tmpl", templateData{
-		Snippet: snippet,
-	})
+	app.render(w, r, http.StatusOK, "view.tmpl", data)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
