@@ -12,7 +12,8 @@
         {{range .Snippets}}
             <tr>
                 <td><a href='/snippet/view?id={{.ID}}'>{{.Title}}</a></td>
-                <td>{{.Created}}</td>
+                <!-- even though this is a function we do not need to call it with brackets -->
+                <td>{{humanDate .Created}}</td>
                 <td>#{{.ID}}</td>
             </tr>
         {{end}}
