@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"net/http"
+	"time"
 )
 
 // This will help us write a log entry at error level, including the requst that cause import
@@ -21,8 +24,37 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
-
 // This is a wrapper around the ´clientError'  that sends a 404.
 func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
+}
+
+func (app *application) render(w http.ResponseWriter, r *http.Request, status int, page string, data templateData) {
+	ts, ok := app.templateCache[page]
+	if !ok {
+		err := fmt.Errorf("the template %s does not exist", page)
+		app.serverError(w, r, err)
+		return
+	}
+	// We need to make a 'trial render' and check if that is okay before we send it to the client.
+	// In order to catch runtime template errors
+	buf := new(bytes.Buffer)
+
+	// Here we write the template to the buffer instead of straight to the HTTP response writer.
+	// If there is an error we can catch it and we can just then return it without sending the half HTML page.
+	err := ts.ExecuteTemplate(buf, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	// Once no 'errors' are there we can write the HTTP status to the ResponseWriter
+	w.WriteHeader(status)
+	// Just writing the buffer to the HTML output.
+	buf.WriteTo(w)
+}
+
+func (app *application) newTemplateData(r *http.Request) templateData {
+	return templateData{
+		CurrentYear: time.Now().Year(),
+	}
 }

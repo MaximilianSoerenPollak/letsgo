@@ -3,9 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
+
 	"snippetbox.msp.net/internal/models"
 )
 
@@ -17,38 +17,15 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r) // This function replies to the request with a 404 not found error.
 		return
 	}
-	// ts, err := template.ParseFiles("./ui/html/pages/home.tmpl")
-	// if err != nil {
-	// 	log.Print(err.Error())
-	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// 	return
-	// }
-	// err = ts.Execute(w, nil)
-	// if err != nil {
-	// 	log.Print(err.Error())
-	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// }
-	files := []string{
-		"./ui/html/base.tmpl",
-		"./ui/html/partials/nav.tmpl",
-		"./ui/html/pages/home.tmpl",
-	}
-	ts, err := template.ParseFiles(files...)
+	snippets, err := app.snippets.Latest()
 	if err != nil {
-	  	// Because the home handler is now a method against the application
-        // struct it can access its fields, including the structured logger. We'll 
-        // use this to create a log entry at Error level containing the error
-        // message, also including the request method and URI as attributes to 
-        // assist with debugging.
-		app.serverError(w,r,err)
-		http.Error(w, "Interval Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
-	err = ts.ExecuteTemplate(w, "base", nil)
-	if err != nil {
-		app.serverError(w,r,err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	// Calling the data here in order to populate the default data (currently just the year)
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
+	app.render(w, r, http.StatusOK, "home.tmpl", data)
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -62,18 +39,23 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
-			app.serverError(w, r, err) 
+			app.serverError(w, r, err)
 		}
 		// We return here early so it does NOT show the empty snippet to the user
 		return
 	}
-	// Plain text response body for the HTML response
-	fmt.Fprintf(w, "%+v", snippet)
+	// Getting new data object to populate the default values
+	data := app.newTemplateData(r)
+	data.Snippet = snippet
+	// Execute the templae files.
+	// Important to note here, anything that you pass as the final parameter to ExecuteTemplate is represented as the '.'
+	// Passing in our tempalte struct here so we can access all data that is internal.
+	app.render(w, r, http.StatusOK, "view.tmpl", data)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)                         // Leeting user know what methods are allowed once we deny his one
+		w.Header().Set("Allow", http.MethodPost)        // Leeting user know what methods are allowed once we deny his one
 		app.clientError(w, http.StatusMethodNotAllowed) //use the error helpers.
 		return
 	}
@@ -83,7 +65,7 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	id, err := app.snippets.Insert(title, content, expires)
 	if err != nil {
 		app.serverError(w, r, err)
-		return 
+		return
 	}
 	// Redirect the user to the relevant page for the snippet
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
