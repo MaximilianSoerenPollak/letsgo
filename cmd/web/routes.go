@@ -1,8 +1,11 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+	"github.com/justinas/alice"
+)
 
-func (app *application) routes() *http.ServeMux {
+func (app *application) routes() http.Handler {
 
 	mux := http.NewServeMux()
 
@@ -13,5 +16,8 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("/snippet/view", app.snippetView)
 	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
-	return mux
+	// Making our standard middlewear chain here that recovers pani, logs and sends secure headers.
+	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+
+	return standard.Then(mux) 
 }
