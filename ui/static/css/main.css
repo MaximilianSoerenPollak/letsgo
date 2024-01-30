@@ -223,34 +223,48 @@ button:hover {
 }
 
 .snippet {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
     background-color: #FFFFFF;
     border: 1px solid #E4E5E7;
     border-radius: 3px;
 }
 
 .snippet pre {
+    width: 100%;
+    text-align: center;
     padding: 18px;
     border-top: 1px solid #E4E5E7;
     border-bottom: 1px solid #E4E5E7;
 }
 
 .snippet .metadata {
+    text-align: center;
+    width: 100%;
     background-color: #F7F9FA;
     color: #6A6C6F;
     padding: 0.75em 18px;
     overflow: auto;
 }
+.snippet .metadata .expires {
+    text-align: left;
 
 .snippet .metadata span {
+    width: 100%;
     float: right;
 }
 
 .snippet .metadata strong {
+    width: 100%;
     color: #34495E;
 }
 
 .snippet .metadata time {
-    display: inline-block;
+    width: 100%;
+    display: flex;
+    flex-direction: column; 
 }
 
 .snippet .metadata time:first-child {

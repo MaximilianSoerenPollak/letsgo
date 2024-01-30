@@ -79,8 +79,6 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	fieldErrors := make(map[string]string)
 	
 	// check if title is < 100 char. long and not blank
-	// We are using the Runecount and not len bto count the UNICODE POINTS, not the bytes.
-	// e.g. -> Zoë has 3 Unicode points but 4 bytes. So we only count 3 not 4 here.
 	if strings.TrimSpace(title) == "" {
 		fieldErrors["title"] = "This field cannot be blank"
 	} else if utf8.RuneCountInString(title) > 100 {
@@ -94,12 +92,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	if expires != 1 && expires != 7 && expires != 365 {
 		fieldErrors["expires"] = "This field must be equal to 1, 7 or 365"
 	}
-	
-	// If there are any errors, just dump them in PLAIN TEXT http response (FPrint) and return from the handler
-	if len(fieldErrors) > 0 {
-		fmt.Fprint(w, fieldErrors)
-		return 
-	}
+
 
 	id, err := app.snippets.Insert(title, content, expires)
 	if err != nil {

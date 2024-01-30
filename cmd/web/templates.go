@@ -14,6 +14,7 @@ type templateData struct {
 	CurrentYear int
 	Snippet     models.Snippet
 	Snippets    []models.Snippet
+	Form 		any // Holy cow and 'any' type?
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
