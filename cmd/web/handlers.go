@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/julienschmidt/httprouter"
 	"snippetbox.msp.net/internal/models"
 )
 
@@ -13,10 +14,7 @@ import (
 // Change signature of the home handler so it is defined against *application
 // We basically make this a method of Application instead of being it's own function.
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r) // This function replies to the request with a 404 not found error.
-		return
-	}
+
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, r, err)
@@ -29,7 +27,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil || id < 1 {
 		app.notFound(w) // using our wrapper for convenience and shorter code
 		return
@@ -54,6 +54,11 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	app.render(w, r, http.StatusOK, "create.tmpl", data)
+}
+
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)        // Leeting user know what methods are allowed once we deny his one
 		app.clientError(w, http.StatusMethodNotAllowed) //use the error helpers.
