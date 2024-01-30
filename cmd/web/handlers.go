@@ -59,19 +59,24 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)        // Leeting user know what methods are allowed once we deny his one
-		app.clientError(w, http.StatusMethodNotAllowed) //use the error helpers.
-		return
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return 
 	}
-	title := "0 snail"
-	content := "0 snail\nClimb Mount Fuji,\n But slowly, slowly!\n\n- Kobayashi Issa"
-	expires := 7
+	// Get the content and stuff from the Form that we processed
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return 
+	}
 	id, err := app.snippets.Insert(title, content, expires)
 	if err != nil {
 		app.serverError(w, r, err)
-		return
-	}
-	// Redirect the user to the relevant page for the snippet
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
+		return 
+	} 
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
+

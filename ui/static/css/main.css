@@ -100,7 +100,8 @@ nav a {
 }
 
 nav form {
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
     margin-left: 1.5em;
 }
 
@@ -161,6 +162,7 @@ a.button:hover, input[type="submit"]:hover {
 }
 
 form div {
+    width: 100%;
     margin-bottom: 18px;
 }
 
