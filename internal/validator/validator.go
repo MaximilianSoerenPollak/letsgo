@@ -25,12 +25,15 @@ func (v *Validator) AddFieldError(key, message string) {
 	}
 }
 
-func (v *Validator) checkField(ok bool, key, message string) {
+func (v *Validator) CheckField(ok bool, key, message string) {
 	if !ok {
 		v.AddFieldError(key, message) 
 	}
 }
 
+func MaxChars(value string, n int) bool {
+	return utf8.RuneCountInString(value) <= n 
+}
 
 func NotBlank(value string) bool {
 	return strings.TrimSpace(value) != ""
