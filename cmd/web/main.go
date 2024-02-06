@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-playground/form/v4"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -15,6 +16,7 @@ type application struct {
 	logger        *slog.Logger
 	snippets      *models.SnippetModel // This is the model we have imported from the 'internal' module.
 	templateCache map[string]*template.Template
+	formDecoder *form.Decoder
 }
 
 func main() {
@@ -43,10 +45,16 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
+
+
+	formDecoder := form.NewDecoder()
+
+
 	app := &application{
 		logger:        logger,
 		snippets:      &models.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder: formDecoder,
 	}
 
 	// ===== Start & Config Server and routes =====
