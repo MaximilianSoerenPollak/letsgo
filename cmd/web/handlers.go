@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
-	"unicode/utf8"
-	
-	"snippetbox.msp.net/internal/validator"
+
 	"snippetbox.msp.net/internal/models"
+	"snippetbox.msp.net/internal/validator"
 
 	"github.com/julienschmidt/httprouter"
 )
-
 
 // ==== ROUTES ====
 // Change signature of the home handler so it is defined against *application
@@ -67,12 +64,11 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 type snippetCreateForm struct {
-	Title   string `form:"title"`
-	Content string `form:"content"`
-	Expires int    `form:"expires"`
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
 	validator.Validator `form:"-"`
 }
-
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	var form snippetCreateForm
@@ -80,16 +76,14 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
-		return 
+		return
 	}
-
-
 
 	// validation of the Form etc.
 	err = app.formDecoder.Decode(&form, r.PostForm)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
-		return 
+		return
 	}
 	// check if title is < 100 char. long and not blank
 	// We are using the Runecount and not len bto count the UNICODE POINTS, not the bytes.
@@ -99,24 +93,21 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
 	form.CheckField(validator.PermittedValue(form.Expires, 1, 7, 365), "expires", "This field must be 1, 7 or 365")
 
-	
 	// If there are any validation errors, then re-display the create.tmpl template,
-    // passing in the snippetCreateForm instance as dynamic data in the Form 
-    // field. Note that we use the HTTP status code 422 Unprocessable Entity 
-    // when sending the response to indicate that there was a validation error.
+	// passing in the snippetCreateForm instance as dynamic data in the Form
+	// field. Note that we use the HTTP status code 422 Unprocessable Entity
+	// when sending the response to indicate that there was a validation error.
 	if !form.Valid() {
 		data := app.newTemplateData(r)
-		data.Form = form 
+		data.Form = form
 		app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl", data)
-		return 
+		return
 	}
 
 	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, r, err)
-		return 
-	} 
+		return
+	}
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
-
-
