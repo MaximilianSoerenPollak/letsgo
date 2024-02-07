@@ -47,8 +47,10 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Getting new data object to populate the default values
+	flash := app.sessionManager.PopString(r.Context(), "flash")
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
+	data.Flash = flash
 	// Execute the templae files.
 	// Important to note here, anything that you pass as the final parameter to ExecuteTemplate is represented as the '.'
 	// Passing in our tempalte struct here so we can access all data that is internal.
@@ -109,5 +111,6 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w, r, err)
 		return
 	}
+	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
