@@ -69,10 +69,16 @@ func main() {
 
 	// ===== Start & Config Server and routes =====
 
+	srv := &http.Server{
+		Addr: *addr,
+		Handler: app.routes(),
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
+	}
+
 	logger.Info("starting server", slog.String("addr", ":4000"))
 	// Using the logger to return / log any errors that http.ListenAndServe gives us.
 	// We are also using here app.routes() in order to get the servemux etc.
-	err = http.ListenAndServe(*addr, app.routes())
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	logger.Error(err.Error())
 	os.Exit(1)
 
