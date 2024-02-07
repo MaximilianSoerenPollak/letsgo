@@ -47,6 +47,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Getting new data object to populate the default values
+	// Do not need to populate Flash as we already do that via the 'newTemplateData' from helper.
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
 	// Execute the templae files.
@@ -109,5 +110,6 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w, r, err)
 		return
 	}
+	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }

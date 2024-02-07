@@ -3,12 +3,17 @@ package main
 import (
 	"database/sql"
 	"flag"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/go-playground/form/v4"
 	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
+
+
+	"github.com/go-playground/form/v4"
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
+	_ "github.com/go-sql-driver/mysql"
 	"snippetbox.msp.net/internal/models"
 )
 
@@ -16,7 +21,9 @@ type application struct {
 	logger        *slog.Logger
 	snippets      *models.SnippetModel // This is the model we have imported from the 'internal' module.
 	templateCache map[string]*template.Template
-	formDecoder *form.Decoder
+	formDecoder   *form.Decoder
+	sessionManager *scs.SessionManager 
+
 }
 
 func main() {
@@ -46,15 +53,18 @@ func main() {
 		os.Exit(1)
 	}
 
-
 	formDecoder := form.NewDecoder()
 
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
 
 	app := &application{
 		logger:        logger,
 		snippets:      &models.SnippetModel{DB: db},
 		templateCache: templateCache,
-		formDecoder: formDecoder,
+		formDecoder:   formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	// ===== Start & Config Server and routes =====
