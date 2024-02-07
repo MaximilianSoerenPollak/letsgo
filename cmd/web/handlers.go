@@ -47,10 +47,9 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Getting new data object to populate the default values
-	flash := app.sessionManager.PopString(r.Context(), "flash")
+	// Do not need to populate Flash as we already do that via the 'newTemplateData' from helper.
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
-	data.Flash = flash
 	// Execute the templae files.
 	// Important to note here, anything that you pass as the final parameter to ExecuteTemplate is represented as the '.'
 	// Passing in our tempalte struct here so we can access all data that is internal.
