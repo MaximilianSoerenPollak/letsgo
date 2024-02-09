@@ -114,11 +114,39 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
 
+type userSignupForm struct {
+	Name                string `form:"name"`
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
+}
+
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Placeholder for html signup")
+	data := app.newTemplateData(r)
+	data.Form = userSignupForm{}
+	app.render(w, r, http.StatusOK, "signup.tmpl", data)
 }
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Placeholder for creating new user")
+	var form userSignupForm
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form.CheckField(validator.NotBlank(form.Name),"name", "This field can not be blank")
+	form.CheckField(validator.NotBlank(form.Email),"email", "This field can not be blank")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX),"email", "Please entere a valid Email address")
+	form.CheckField(validator.NotBlank(form.Password),"password", "This field cannot be blank")
+	form.CheckField(validator.MinChars(form.Password, 8),"password", "Your password must have at least 8 characters")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form 
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data) 
+		return 
+	}
+	fmt.Fprintln(w, "Create a new user...")
 }
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Placeholder for user login")
