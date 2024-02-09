@@ -12,11 +12,12 @@ var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](
 
 type Validator struct {
 	FieldErrors map[string]string 
+	NonFieldErrors []string
 
 }
 
 func (v *Validator) Valid() bool {
-	return len(v.FieldErrors) == 0 
+	return len(v.FieldErrors) == 0  && len(v.NonFieldErrors) == 0
 }
 
 func (v *Validator) AddFieldError(key, message string) {
@@ -52,4 +53,9 @@ func MinChars(value string, n int) bool {
 
 func Matches(value string, rx *regexp.Regexp) bool {
 	return rx.MatchString(value) 
+}
+
+// This is to show error messages that are not to do with a SINGLE field, but are more generic.
+func (v *Validator) AddNonFieldError(message string) {
+	v.NonFieldErrors = append(v.NonFieldErrors, message)
 }
