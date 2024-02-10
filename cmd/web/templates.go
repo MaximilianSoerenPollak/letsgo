@@ -16,7 +16,9 @@ type templateData struct {
 	Snippet     models.Snippet
 	Snippets    []models.Snippet
 	Form        any // Holy cow and 'any' type?
-	Flash       string
+	Flash       string // Used for a flash message
+	IsAuthenticated bool  
+	CSRFToken string
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

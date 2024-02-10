@@ -216,5 +216,16 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Placeholder userLogout POst")
+	// We are giving them a new user authenticate Id so they can use t he same one to log back in.
+	err := app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, r, err)
+		return 
+	}
+	// Remove the authenticatedUserID from the session -> logging user out 
+	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+	
+	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully")
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
