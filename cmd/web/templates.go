@@ -4,8 +4,10 @@ import (
 	"html/template"
 	"path/filepath"
 	"time"
+	"io/fs"
 
 	"snippetbox.msp.net/internal/models"
+	"snippetbox.msp.net/ui"
 )
 
 // This is defined as a template type to hold any data that we want to pass into our HTML templates.
@@ -25,7 +27,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	//Initialize a new map to act as the cache -> Q: Is this normal to use a map as cache?
 	cache := map[string]*template.Template{}
 
-	pages, err := filepath.Glob("./ui/html/pages/*.tmpl")
+	pages, err := fs.Glob(ui.Files, "html/pages/*.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -34,19 +36,17 @@ func newTemplateCache() (map[string]*template.Template, error) {
 
 		name := filepath.Base(page)
 
-		ts, err := template.New(name).Funcs(functions).ParseFiles("./ui/html/base.tmpl")
+		patterns := []string{
+			"html/base.tmpl",
+			"html/partials/*.tmpl",
+			page,
+		}
+
+		ts, err := template.New(name).Funcs(functions).ParseFS(ui.Files, patterns...)
 		if err != nil {
 			return nil, err
 		}
-		// Calling parseglob to add any partials (in this template set)
-		ts, err = ts.ParseGlob("./ui/html/partials/*.tmpl")
-		if err != nil {
-			return nil, err
-		}
-		ts, err = ts.ParseFiles(page)
-		if err != nil {
-			return nil, err
-		}
+
 		cache[name] = ts
 	}
 	return cache, nil
